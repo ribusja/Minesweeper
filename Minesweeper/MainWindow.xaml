@@ -6,10 +6,8 @@
         xmlns:local="clr-namespace:Minesweeper"
         mc:Ignorable="d"
         Title="Minesweeper" 
-        MinHeight="363" MinWidth="316"
-        Height="363" Width="316" 
-        Loaded="Window_Loaded"
-        >
+        MinHeight="363" MinWidth="250"
+        Height="363" Width="10">
     <Grid Name="Main_Container">
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
@@ -18,8 +16,9 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="25"/>
-            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="200"/>
             <ColumnDefinition Width="25"/>
         </Grid.ColumnDefinitions>
+        <Button Name="StartGame"  Grid.Column="1" Margin="50 10" Content="New Game" Click="StartGame_Click"/>
     </Grid>
 </Window>
