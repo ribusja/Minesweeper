@@ -1,0 +1,14 @@
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\bin\Debug\Minesweeper.exe.config
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\bin\Debug\Minesweeper.exe
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\bin\Debug\Minesweeper.pdb
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\Minesweeper.csprojResolveAssemblyReference.cache
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\MainWindow.g.cs
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\App.g.cs
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\Minesweeper_MarkupCompile.cache
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\Minesweeper_MarkupCompile.lref
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\MainWindow.baml
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\Minesweeper.g.resources
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\Minesweeper.Properties.Resources.resources
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\Minesweeper.csproj.GenerateResource.Cache
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\Minesweeper.exe
+D:\ProjectsMine\C#\Minesweeper\Minesweeper\obj\Debug\Minesweeper.pdb
