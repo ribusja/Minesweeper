@@ -65,7 +65,7 @@ namespace Minesweeper
         {
             Grid toDel = (Grid)LogicalTreeHelper.FindLogicalNode(Main_Container, "GameField");
             Main_Container.Children.Remove(toDel);
-            Settings.SetStartValuables(GameDifficulty.Normal);
+            Settings.SetStartValuables(GameDifficulty.Hard);
             GameField gf = new GameField(Main_Container);
         }
     }
@@ -119,6 +119,7 @@ namespace Minesweeper
 
         public void SetStartValuables(GameDifficulty difficulty)
         {
+            //TODO: think about minecount
             switch (difficulty)
             {
                 case GameDifficulty.Easy:
@@ -129,15 +130,15 @@ namespace Minesweeper
                 case GameDifficulty.Normal:
                     RowCount = 16;
                     ColCount = 16;
-                    MinePercent = 20;
+                    MinePercent = 15;
                     break;
                 case GameDifficulty.Hard:
                     RowCount = 20;
                     ColCount = 50;
-                    MinePercent = 35;
+                    MinePercent = 15;
                     break;
                 case GameDifficulty.Custom:
-                    //Instantiate new Window
+                    //TODO: Instantiate new Window
                     break;
             }
 
@@ -198,9 +199,26 @@ namespace Minesweeper
             for (int i = 0; i < Game_ColumnCount; i++)
                 Game_Field.ColumnDefinitions.Add(new ColumnDefinition());
 
+            int ElementIndex;
             for (int row = 0; row < Game_RowCount; row++)
                 for (int column = 0; column < Game_ColumnCount; column++)
+                {
                     Game_Elementlist.Add(new GameElement(Game_Field, row, column));
+                    ElementIndex = Game_Elementlist.Count - 1;
+
+                    if (column > 0)
+                    {
+                        Game_Elementlist[ElementIndex].AddNeighbor(Game_Elementlist[ElementIndex - 1]);
+                        if (row > 0)
+                            Game_Elementlist[ElementIndex].AddNeighbor(Game_Elementlist[ElementIndex - Game_ColumnCount - 1]);
+                    }
+                    if (row > 0)
+                    {
+                        Game_Elementlist[ElementIndex].AddNeighbor(Game_Elementlist[ElementIndex - Game_ColumnCount]);
+                        if (column < Game_ColumnCount - 1)
+                            Game_Elementlist[ElementIndex].AddNeighbor(Game_Elementlist[ElementIndex - Game_ColumnCount + 1]);
+                    }
+                }
 
             Random rnd = new Random();
             for (int mine = 0; mine < GameSettings.Instance.GetMineCount(); mine++)
@@ -223,6 +241,7 @@ namespace Minesweeper
         Button Element_Ui;
         int Element_Row;
         int Element_Column;
+        int countNearbyMine;
         bool Element_isMine;
         GameElementState element_State;
         GameElementState Element_State
@@ -237,6 +256,7 @@ namespace Minesweeper
                 }
             }
         }
+        List<GameElement> neighbors;
 
         public GameElement(Grid Game_Field, int Row, int Column)
         {
@@ -244,6 +264,8 @@ namespace Minesweeper
             Element_Row = Row;
             Element_State = GameElementState.Inactive;
             Element_isMine = false;
+            neighbors = new List<GameElement>();
+            countNearbyMine = 0;
 
             Element_Ui = new Button();
             Element_Ui.Width = Element_Ui.Height = GameSettings.Instance.GetUISize(); 
@@ -260,7 +282,27 @@ namespace Minesweeper
             if (Element_isMine)
                 return false;
             Element_isMine = true;
+            for (int i = 0; i < neighbors.Count; i++)
+            {
+                neighbors[i].isNearMine();
+            }
+            Element_Ui.Content = "#";
             return true;
+        }
+
+        void isNearMine()
+        {
+            if (!Element_isMine)
+            {
+                countNearbyMine++;
+                Element_Ui.Content = countNearbyMine.ToString();
+            }
+        }
+
+        public void AddNeighbor(GameElement neighbor)
+        {
+            neighbors.Add(neighbor);
+            neighbor.neighbors.Add(this);
         }
 
         void Element_Click(object sender, RoutedEventArgs e)
@@ -299,6 +341,9 @@ namespace Minesweeper
                     {
                         Element_Ui.Focusable = false;
                         Element_Ui.Background = Brushes.Gray;
+                        if (countNearbyMine == 0)
+                            for (int i = 0; i < neighbors.Count; i++)
+                                neighbors[i].Element_State = GameElementState.Checked;
                     }
                     
                     break;
