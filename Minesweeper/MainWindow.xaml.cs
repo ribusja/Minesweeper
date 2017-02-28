@@ -15,22 +15,152 @@ using System.Windows.Shapes;
 
 namespace Minesweeper
 {
+
+    enum GameElementState
+    {
+        Inactive = 0,
+        Checked,
+        Flag
+    }
+
+    public enum GameDifficulty
+    {
+        Easy,
+        Normal,
+        Hard,
+        Custom
+    }
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
+        GameSettings Settings;
+        public static MainWindow Instance;
+
         public MainWindow()
         {
             InitializeComponent();
         }
 
+        private void GameWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            Instance = this;
+            Settings = new GameSettings();
+        }
+
+        public void EndGameHandle(bool isWin)
+        {
+            if (isWin)
+            {
+                MessageBox.Show("Hooraaa");
+            }
+            else
+            {
+                MessageBox.Show("ohhh...");
+            }
+        }
+
         private void StartGame_Click(object sender, RoutedEventArgs e)
         {
-            /*Grid toDel = (Grid)LogicalTreeHelper.FindLogicalNode(Main_Container, "GameField");
+            Grid toDel = (Grid)LogicalTreeHelper.FindLogicalNode(Main_Container, "GameField");
             Main_Container.Children.Remove(toDel);
-            GameField gf = new GameField(Main_Container);*/
-           MessageBox.Show(this.ActualWidth.ToString());
+            Settings.SetStartValuables(GameDifficulty.Normal);
+            GameField gf = new GameField(Main_Container);
+        }
+    }
+
+    public class GameSettings
+    {
+        public static GameSettings Instance;
+        GridLength FieldWidth;
+        GridLength FieldHeight;
+        int ElementUI_Size;
+        const int MaxRowCount = 20;
+        const int MinRowCount = 10;
+        const int MaxColCount = 50;
+        const int MinColCount = 10;
+        const int MaxMinePercent = 75;
+        const int MinMinePercent = 5;
+        int RowCount;
+        int ColCount;
+        int MinePercent;
+        double MineCount;
+
+        public int GetRowCount()
+        {
+            return RowCount;
+        }
+
+        public int GetColCount()
+        {
+            return ColCount;
+        }
+
+        public double GetMineCount()
+        {
+            return MineCount;
+        }
+
+        public GameSettings()
+        {
+            Instance = this;
+            ElementUI_Size = 25;
+            RowCount = 0;
+            ColCount = 0;
+            MinePercent = 0;
+            MineCount = 0;
+        }
+
+        public int GetUISize()
+        {
+            return ElementUI_Size;
+        }
+
+        public void SetStartValuables(GameDifficulty difficulty)
+        {
+            switch (difficulty)
+            {
+                case GameDifficulty.Easy:
+                    RowCount = 10;
+                    ColCount = 10;
+                    MinePercent = 10;
+                    break;
+                case GameDifficulty.Normal:
+                    RowCount = 16;
+                    ColCount = 16;
+                    MinePercent = 20;
+                    break;
+                case GameDifficulty.Hard:
+                    RowCount = 20;
+                    ColCount = 50;
+                    MinePercent = 35;
+                    break;
+                case GameDifficulty.Custom:
+                    //Instantiate new Window
+                    break;
+            }
+
+            MineCount = (double)RowCount * (double)ColCount / 100 * MinePercent;
+            FieldWidth = new GridLength(ColCount * ElementUI_Size);
+            FieldHeight = new GridLength(RowCount * ElementUI_Size);
+
+            SetFieldSize();
+        }
+
+        public void SetFieldSize()
+        {
+            double screenWidth = SystemParameters.PrimaryScreenWidth;
+            double screenHeight = SystemParameters.PrimaryScreenHeight;
+            MainWindow.Instance.GameWindow.Left = (screenWidth / 2) - ((FieldWidth.Value + 50) / 2);
+            MainWindow.Instance.GameWindow.Top = (screenHeight / 2) - ((FieldHeight.Value + 100) / 2);
+
+            MainWindow.Instance.GameWindow.Width = FieldWidth.Value + 50;
+            MainWindow.Instance.GameWindow.Height = FieldHeight.Value + 100;
+            MainWindow.Instance.Game_Column.Width = FieldWidth;
+            MainWindow.Instance.Game_Row.Height = FieldHeight;
+            MainWindow.Instance.GameWindow.HorizontalAlignment = HorizontalAlignment.Center;
+            MainWindow.Instance.GameWindow.VerticalAlignment = VerticalAlignment.Center;
         }
     }
 
@@ -40,14 +170,17 @@ namespace Minesweeper
         Grid Game_Container;
         int Game_RowCount;
         int Game_ColumnCount;
+        List<GameElement> Game_Elementlist;
+        List<GameElement> Game_Minelist;
 
         public GameField(Grid Container)
         {
             Game_Instance = this;
             Game_Container = Container;
-            Game_RowCount = 3;
-            Game_ColumnCount = 3;
-
+            Game_RowCount = GameSettings.Instance.GetRowCount();
+            Game_ColumnCount = GameSettings.Instance.GetColCount();
+            Game_Elementlist = new List<GameElement>();
+            Game_Minelist = new List<GameElement>();
             InitializeField();
         }
 
@@ -67,19 +200,22 @@ namespace Minesweeper
 
             for (int row = 0; row < Game_RowCount; row++)
                 for (int column = 0; column < Game_ColumnCount; column++)
+                    Game_Elementlist.Add(new GameElement(Game_Field, row, column));
+
+            Random rnd = new Random();
+            for (int mine = 0; mine < GameSettings.Instance.GetMineCount(); mine++)
+            {
+                int element = rnd.Next(0, Game_Elementlist.Count - 1);
+                if (Game_Elementlist[element].SetMine())
                 {
-                    GameElement NewElement = new GameElement(Game_Field, row, column);
+                    Game_Minelist.Add(Game_Elementlist[element]);
                 }
+                else mine--;
+            }
 
             Game_Container.Children.Add(Game_Field);
         }
-    }
 
-    enum GameElementState
-    {
-        Inactive = 0,
-        Checked,
-        Flag
     }
 
     class GameElement
@@ -87,6 +223,7 @@ namespace Minesweeper
         Button Element_Ui;
         int Element_Row;
         int Element_Column;
+        bool Element_isMine;
         GameElementState element_State;
         GameElementState Element_State
         {
@@ -106,17 +243,24 @@ namespace Minesweeper
             Element_Column = Column;
             Element_Row = Row;
             Element_State = GameElementState.Inactive;
+            Element_isMine = false;
 
             Element_Ui = new Button();
-            Element_Ui.Width = 25;
-            Element_Ui.Height = 25;
+            Element_Ui.Width = Element_Ui.Height = GameSettings.Instance.GetUISize(); 
             Grid.SetColumn(Element_Ui, Column);
             Grid.SetRow(Element_Ui, Row);
             Element_Ui.Click += new RoutedEventHandler(Element_Click);
             Element_Ui.MouseRightButtonDown += new MouseButtonEventHandler(Element_RightClick);
 
             Game_Field.Children.Add(Element_Ui);
-            MessageBox.Show(Element_State.ToString());
+        }
+
+        public bool SetMine()
+        {
+            if (Element_isMine)
+                return false;
+            Element_isMine = true;
+            return true;
         }
 
         void Element_Click(object sender, RoutedEventArgs e)
@@ -145,15 +289,24 @@ namespace Minesweeper
                 case GameElementState.Inactive:
                     break;
                 case GameElementState.Checked:
-                    Element_Ui.Focusable = false;
-                    Element_Ui.Background = Brushes.Gray;
+                    if (Element_isMine)
+                    {
+                        Element_Ui.Focusable = false;
+                        Element_Ui.Background = Brushes.Red;
+                        MainWindow.Instance.EndGameHandle(false);
+                    }
+                    else
+                    {
+                        Element_Ui.Focusable = false;
+                        Element_Ui.Background = Brushes.Gray;
+                    }
+                    
                     break;
                 case GameElementState.Flag:
                     Element_Ui.Focusable = false;
                     Element_Ui.Background = Brushes.Yellow;
                     break;
             }
-            MessageBox.Show(Element_State.ToString());
         }
     } 
 }
